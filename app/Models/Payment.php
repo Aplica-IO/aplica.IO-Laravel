@@ -42,7 +42,7 @@ class Payment extends Model {
 	}
 
 	public function status() {
-		return $this->belongsTo(status::class, 'status', 'id');
+		return $this->belongsTo(Status::class, 'status', 'id');
 	}
 
     public function currency() {
