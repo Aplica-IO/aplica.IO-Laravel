@@ -37,6 +37,9 @@ Route::post('reset-password', 'Auth\AuthController@resetPassword');
 Route::prefix('')->group(function () {
     // Send invitation for properties.
     Route::post('invitation', 'User\UserController@invite');
+	// Store Personal Charges to some properties
+    Route::post('storePersonalCharges', 'Charge\ChargeController@storePersonalCharges');
+	
 	Route::apiResource('address', 'Geolocation\GeolocationController');
 	Route::apiResource('users', 'User\UserController');
 	Route::apiResource('residence', 'Residence\ResidenceController');//index.correct\\//show.correct\\//store.correct\\//update.correct\\//delete.correct\\

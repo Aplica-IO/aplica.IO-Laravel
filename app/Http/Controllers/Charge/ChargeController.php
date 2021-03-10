@@ -32,30 +32,24 @@ class ChargeController extends Controller {
      */
     public function store(Request $request) {
 
-        $client = new Client([
-            'base_uri' => 'https://s3.amazonaws.com',
-        ]);
-
-        $res = $client->request('GET', 'dolartoday/data.json');
-        $sicad = json_decode(mb_convert_encoding($res->getBody()->getContents(), 'UTF-8', 'UTF-8'))->USD->sicad2;
-        $dolarPrice = $sicad == null ? json_decode(mb_convert_encoding($res->getBody()->getContents(), 'UTF-8', 'UTF-8'))->USD->transferencia : $sicad;
-
         $invoice = Invoice::findOrFail($request->invoice_id);
         if($invoice->currency == 1){
             $amount = $request->amount;
         }if($invoice->currency == 2){
-            $amount = $request->amount / $dolarPrice;
+            $amount = $request->amount / $request->bcv;
         }
+
         $charge = Charge::create([
             'invoice_id' => $request->invoice_id,
             'amount' => $amount,
-            'bcv' => $dolarPrice,
+            'bcv' => $request->bcv,
             'name' => $request->name,
             'reason' => $request->reason,
             'spend_date' => $request->spend_date,
             'type' => $request->type,
             'propertyId' => $request->propertyId
         ]);
+
         $op = $invoice->total + $amount;
         $invoice->total = $op;
         $invoice->save();
@@ -70,6 +64,10 @@ class ChargeController extends Controller {
             ]);
 
         }else{
+
+            $op = $invoice->total + $amount;
+            $invoice->total = $op;
+            $invoice->save();
 
             $residence = Residence::with(['properties'])->where('id',$invoice->residence_id)->first();
 
@@ -88,6 +86,53 @@ class ChargeController extends Controller {
         }
 
         return ApiHelpers::ApiResponse(200, 'Successfully completed', $charge);
+    }
+
+    public function storePersonalCharges(Request $request){
+
+        $invoice = Invoice::findOrFail($request->invoice_id);
+
+        if($invoice->currency == 1){
+            $amount = $request->amount;
+        }if($invoice->currency == 2){
+            $amount = $request->amount / $request->bcv;
+        }
+
+        $op = $invoice->total + $amount;
+        $invoice->total = $op;
+        $invoice->save();
+        $count = count($request->properties);
+        $divided = $amount / $count;
+
+        for($i=0;$i < $count;$i++){
+
+            $charge = Charge::create([
+                'invoice_id' => $request->invoice_id,
+                'amount' => $divided,
+                'bcv' => $request->bcv,
+                'name' => $request->name,
+                'reason' => $request->reason,
+                'spend_date' => $request->spend_date,
+                'type' => 3,
+                'propertyId' => $request->properties[$i]
+            ]);
+
+            $property = Property::findOrFail($request->properties[$i]);
+            $residence = Residence::findOrFail($property->residence_id);
+
+            $op = $charge->amount;
+            $reserve_op = $divided * ($residence->reserve_percentage / 100);
+            $op_final = $op + $reserve_op;
+            $newBalance = $property->balance - $op_final;
+            $residence->reserve = $residence->reserve + $reserve_op;
+
+            $residence->save();
+            $property->update([
+                'balance' => $newBalance
+            ]);
+        }
+
+        return ApiHelpers::ApiResponse(200, 'Successfully completed', [$property, $residence, $charge]);
     }
 
     /**
