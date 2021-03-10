@@ -124,15 +124,13 @@ class ChargeController extends Controller {
             $reserve_op = $divided * ($residence->reserve_percentage / 100);
             $op_final = $op + $reserve_op;
             $newBalance = $property->balance - $op_final;
-            $residence->reserve = $residence->reserve + $reserve_op;
 
-            $residence->save();
             $property->update([
                 'balance' => $newBalance
             ]);
         }
 
-        return ApiHelpers::ApiResponse(200, 'Successfully completed', [$property, $residence, $charge]);
+        return ApiHelpers::ApiResponse(200, 'Successfully completed', [$property, $charge]);
     }
 
     /**
