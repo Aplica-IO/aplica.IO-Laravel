@@ -84,7 +84,7 @@
                                                         </tr>
                                                         <tr style="border-collapse:collapse; margin-top:20px;">
                                                             <td align="center" style="padding:0;Margin:0;padding-top:10px;padding-bottom:10px">
-                                                            <a target="_blank" href="https://app.aplica.io/invoice/{$invoice_id}"
+                                                            <a target="_blank" href="https://app.aplica.io/invoice/{{$invoice_id}}"
                                                             style="background-color:#00B8B2; padding:20px; border-radius:10px; color:#fff;">
                                                             Ver la factura</a>
                                                                 
