@@ -19,7 +19,7 @@ class ChargeController extends Controller {
      * @return \Illuminate\Http\JsonResponse
      */
     public function index() {
-        $index = Charge::with('invoices')->paginate(200);
+        $index = Charge::with('invoice')->paginate(200);
 
         return ApiHelpers::ApiResponse(200, 'Successfully completed', $index);
     }
