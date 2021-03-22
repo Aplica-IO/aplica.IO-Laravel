@@ -13,6 +13,8 @@ use App\Helpers\ApiHelpers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\SendInvoiceNotification;
 
 class InvoiceController extends Controller {
 	/**
@@ -176,6 +178,13 @@ class InvoiceController extends Controller {
         $invoice->update([
             'is_active' => false
         ]);
+		$x=0;
+		$receivers = [];
+		foreach($invoice->residence->properties as $property){
+			$receivers[$x] = $property->user->email;
+			$x++;
+		}
+		Mail::to($receivers)->send(new SendInvoiceNotification($invoice->id));
 
         /*foreach($residence->properties as $property){
 
