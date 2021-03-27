@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Date;
-
+ 
 class ChargeController extends Controller {
     /**
      * Display a listing of the resource.
@@ -25,6 +25,7 @@ class ChargeController extends Controller {
         return ApiHelpers::ApiResponse(200, 'Successfully completed', $index);
     }
 
+
     /**
      * Store a newly created resource in storage.
      *
@@ -32,7 +33,7 @@ class ChargeController extends Controller {
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request) {
-
+        
         $invoice = Invoice::findOrFail($request->invoice_id);
         if($invoice->currency == 1){
             $amount = $request->amount;
@@ -43,14 +44,13 @@ class ChargeController extends Controller {
         $charge = Charge::create([
             'invoice_id' => $request->invoice_id,
             'amount' => $amount,
-            'bcv' => $request->bcv,
+            'bcv' => ApiHelpers::dolarPrice(),
             'name' => $request->name,
             'reason' => $request->reason,
-            //'spend_date' => new Date(),
+            'spend_date' => $request->spend_date,
             'type' => $request->type,
             'propertyId' => $request->propertyId
         ]);
-
         $op = $invoice->total + $amount;
         $invoice->total = $op;
         $invoice->save();
@@ -60,41 +60,18 @@ class ChargeController extends Controller {
 
         if($charge->type == 3){
             if($modify_reserve){
-                $residence = Residence::findOrFail($invoice->residence_id);
-                $reserve_op = $residence->reserve - $charge->amount;
-                $residence->reserve = $reserve_op;
-                $residence->save();
+                ApiHelpers::ModifyReserve($invoice->residence_id,$charge->amount);
             }else{
-                $property = Property::findOrFail($request->propertyId);
-                $oldBalance = $property->balance;
-                $balance = $oldBalance - $charge->amount;
-                $property->update([
-                    'balance' => $balance
-                ]);
+                ApiHelpers::ModifyBalance($request->propertyId,$charge->amount);               
             }
         }else{
             $op = $invoice->total + $amount;
             $invoice->total = $op;
             $invoice->save();
-            $residence = Residence::with(['properties'])->where('id',$invoice->residence_id)->first();
             if($modify_reserve){
-                foreach($residence->properties as $property){
-                    $op = ($property->alicuota / 100) * $charge->amount;
-                    $reserve_op = $op * ($residence->reserve_percentage / 100);
-                    $final_op = $reserve_op + $op;
-                    $residence->reserve -= $final_op;
-                    $residence->save();
-                }
+                ApiHelpers::ProcessResidenceBalanceAndReserve($invoice->residence_id,$charge->amount);
             }else{
-                foreach($residence->properties as $property){
-                    $op = ($property->alicuota / 100) * $charge->amount;
-                    $reserve_op = $op * ($residence->reserve_percentage / 100);
-                    $final_op = $reserve_op + $op;
-                    $newBalance = $property->balance - $final_op;
-                    $property->update([
-                        'balance' => $newBalance
-                    ]);
-                }
+                ApiHelpers::ProcessOnlyResidenceBalance($invoice->residence_id,$charge->amount);
             }            
         }
 
@@ -124,7 +101,7 @@ class ChargeController extends Controller {
             $charge = Charge::create([
                 'invoice_id' => $request->invoice_id,
                 'amount' => $divided,
-                'bcv' => $request->bcv,
+                'bcv' => ApiHelpers::dolarPrice(),
                 'name' => $request->name,
                 'reason' => $request->reason,
                 'spend_date' => $request->spend_date,
@@ -133,21 +110,15 @@ class ChargeController extends Controller {
             ]);
             // get property and residence
             $property = Property::findOrFail($request->properties[$i]);
-            $residence = Residence::findOrFail($property->residence_id);
             // If reserve of balance
             $modify_reserve = $request->modify_reserve;
             if($modify_reserve){
-                $residence->reserve -= $divided;
-                $residence->save();
+                ApiHelpers::ModifyReserve($property->residence_id,$charge->amount);
+                ApiHelpers::ModifyBalance($property->id,$charge->amount);
             } else {
                 // operation for property
-                $op = $charge->amount;
-                $reserve_op = $divided * ($residence->reserve_percentage / 100);
-                $op_final = $op + $reserve_op;
-                $newBalance = $property->balance - $op_final;
-                $property->update([
-                    'balance' => $newBalance
-                ]);
+                $op = ($divided * ($residence->reserve_percentage / 100) + $divided);
+                ApiHelpers::ModifyBalance($property->id,$op);
             }
         }
 
