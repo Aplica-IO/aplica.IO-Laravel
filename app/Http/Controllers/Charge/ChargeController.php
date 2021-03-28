@@ -44,7 +44,7 @@ class ChargeController extends Controller {
         $charge = Charge::create([
             'invoice_id' => $request->invoice_id,
             'amount' => $amount,
-            'bcv' => ApiHelpers::dolarPrice(),
+            'bcv' => $request->bcv,
             'name' => $request->name,
             'reason' => $request->reason,
             'spend_date' => $request->spend_date,
@@ -59,20 +59,13 @@ class ChargeController extends Controller {
         
 
         if($charge->type == 3){
-            if($modify_reserve){
-                ApiHelpers::ModifyReserve($invoice->residence_id,$charge->amount);
-            }else{
                 ApiHelpers::ModifyBalance($request->propertyId,$charge->amount);               
-            }
+            
         }else{
             $op = $invoice->total + $amount;
             $invoice->total = $op;
             $invoice->save();
-            if($modify_reserve){
-                ApiHelpers::ProcessResidenceBalanceAndReserve($invoice->residence_id,$charge->amount);
-            }else{
-                ApiHelpers::ProcessOnlyResidenceBalance($invoice->residence_id,$charge->amount);
-            }            
+            ApiHelpers::ProcessResidenceBalanceAndReserve($invoice->residence_id,$charge->amount);
         }
 
         return ApiHelpers::ApiResponse(200, 'Successfully completed', $charge);
@@ -101,25 +94,20 @@ class ChargeController extends Controller {
             $charge = Charge::create([
                 'invoice_id' => $request->invoice_id,
                 'amount' => $divided,
-                'bcv' => ApiHelpers::dolarPrice(),
+                'bcv' => $request->bcv,
                 'name' => $request->name,
                 'reason' => $request->reason,
                 'spend_date' => $request->spend_date,
                 'type' => 3,
                 'propertyId' => $request->properties[$i]
-            ]);
+            ]); 
             // get property and residence
             $property = Property::findOrFail($request->properties[$i]);
-            // If reserve of balance
-            $modify_reserve = $request->modify_reserve;
-            if($modify_reserve){
-                ApiHelpers::ModifyReserve($property->residence_id,$charge->amount);
-                ApiHelpers::ModifyBalance($property->id,$charge->amount);
-            } else {
-                // operation for property
-                $op = ($divided * ($residence->reserve_percentage / 100) + $divided);
-                ApiHelpers::ModifyBalance($property->id,$op);
-            }
+            
+            // operation for property
+            $op = ($divided * ($residence->reserve_percentage / 100) + $divided);
+            ApiHelpers::ModifyBalance($property->id,$op);
+            
         }
 
         return ApiHelpers::ApiResponse(200, 'Successfully completed', [$property, $charge]);

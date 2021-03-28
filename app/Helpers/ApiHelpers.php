@@ -21,7 +21,7 @@ class ApiHelpers {
             'response' => $response
         ], $code);
     }
-    public static function dolarPrice() {
+    /* public static function dolarPrice() {
         $client = new Client([
             'base_uri' => 'http://s3.amazonaws.com',
         ]);
@@ -31,7 +31,7 @@ class ApiHelpers {
         $dolarPrice = $sicad == null ? json_decode(mb_convert_encoding($res->getBody()->getContents(), 'UTF-8', 'UTF-8'))->USD->transferencia : $sicad;
 
         return $dolarPrice;
-    }
+    } */
     public  static function GetBalance($properties)
     {
         $balance = 0;
@@ -71,7 +71,7 @@ class ApiHelpers {
             $residence->reserve -= ($amount - $property->balance);
         }
     }
-    public static function ProcessOnlyResidenceBalance($id,$amount){
+    /* public static function ProcessOnlyResidenceBalance($id,$amount){
         $balance = 0;
         $residence = Residence::with(['properties'])->first();
         foreach($residence->properties as $property){
@@ -84,5 +84,5 @@ class ApiHelpers {
         if($property->balance < $amount){
             $residence->reserve -= ($amount - $property->balance);
         }
-    }
+    } */
 }
