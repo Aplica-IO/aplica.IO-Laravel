@@ -48,27 +48,30 @@ class ApiHelpers {
     }
 
     public static function ModifyBalance($id,$amount){
-        $property = Property::findOrFail($id,$amount);
+        $property = Property::findOrFail($id);
         $property->balance -= $amount;
         $property->save();
     }
 
     public static function ProcessResidenceBalanceAndReserve($id,$amount){
-        $balance = 0;
-        $residence = Residence::with(['properties'])->first();
+        $balanceOld = 0;
+        $balanceNew = 0;
+        $residence = Residence::with(['properties'])->where('id', $id)->first();
         foreach($residence->properties as $property){
+            $balanceOld = $balanceOld + $property->balance;
             $property = Property::findOrFail($property->id);
             $hasToPay = ($property->alicuota / 100) * $amount;
-            $reservePercentage = $residence->reserve_percentage / 100;
-            $op = ($hasToPay * $reservePercentage) + $hasToPay;
-            $property->balance -= $op;
+            // $reservePercentage = $residence->reserve_percentage / 100;
+            // $op = ($hasToPay * $reservePercentage) + $hasToPay;
+            $property->balance -= $hasToPay;
             $property->save();
-            $residence->reserve += $hasToPay * $reservePercentage;
-            $residence->save();
-            $balance += $property->balance;
+            $balanceNew = $balanceNew + $property->balance;
         }
-        if($property->balance < $amount){
-            $residence->reserve -= ($amount - $property->balance);
+        if($balanceNew < 0 || $balance = 0){
+            $op = ($balanceOld + $residence->reserve);
+            $residence->reserve =  $op - $amount;
+            $residence->save();
+            return [$op, $amount, $amount - $op, $residence];
         }
     }
     /* public static function ProcessOnlyResidenceBalance($id,$amount){
