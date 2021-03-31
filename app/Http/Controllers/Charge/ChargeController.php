@@ -55,17 +55,11 @@ class ChargeController extends Controller {
         $invoice->total = $op;
         $invoice->save();
 
-        $modify_reserve = $request->modify_reserve;
-        
-
         if($charge->type == 3){
-                ApiHelpers::ModifyBalance($request->propertyId,$charge->amount);               
+                ApiHelpers::ModifyBalance($request->propertyId, $charge->amount);
             
         }else{
-            $op = $invoice->total + $amount;
-            $invoice->total = $op;
-            $invoice->save();
-            ApiHelpers::ProcessResidenceBalanceAndReserve($invoice->residence_id,$charge->amount);
+            ApiHelpers::ProcessResidenceBalanceAndReserve($invoice->residence_id, $charge->amount);
         }
 
         return ApiHelpers::ApiResponse(200, 'Successfully completed', $charge);
@@ -105,8 +99,7 @@ class ChargeController extends Controller {
             $property = Property::findOrFail($request->properties[$i]);
             
             // operation for property
-            $op = ($divided * ($residence->reserve_percentage / 100) + $divided);
-            ApiHelpers::ModifyBalance($property->id,$op);
+            ApiHelpers::ModifyBalance($property->id, $divided);
             
         }
 

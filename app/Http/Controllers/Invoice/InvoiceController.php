@@ -74,7 +74,7 @@ class InvoiceController extends Controller {
 
 		$invoice = Invoice::findOrFail($invoice_id);
 		$invoices = DB::table('invoices')
-		->where(['residence_id'=>$invoice->residence->id,'is_active'=>0])
+		->where(['residence_id'=>$invoice->residence->id])
 		->where('id','<',$invoice->id)
 		->get();
 		$property = Property::findOrFail($property_id);
@@ -133,7 +133,6 @@ class InvoiceController extends Controller {
 
 	public function showThroughResidence($id) {
 		$invoice = Invoice::with(['charges', 'residence'])->where('residence_id', $id)
-			->where('is_active', 0)
 			->orderBy('id', 'desc')->get();
 		if ($invoice->all() == null) {
 			return ApiHelpers::ApiResponse(404, '404 not found', null);
@@ -181,39 +180,20 @@ class InvoiceController extends Controller {
 		$x=0;
 		$receivers = [];
 		foreach($invoice->residence->properties as $property){
-			$receivers[$x] = $property->user->email;
-			$x++;
-		}
-		Mail::to($receivers)->send(new SendInvoiceNotification($invoice->id));
-
-        /*foreach($residence->properties as $property){
 
             $op = ($property->alicuota / 100) * $invoice->total;
-            $reserve_op = $op * ($residence->reserve_percentage / 100);
-            $op_final = $op + $reserve_op;
-            $newBalance = $property->balance - $op_final;
+            $reserve_op = $op * ($invoice->residence->reserve_percentage / 100);
+            $newBalance = $property->balance - $reserve_op;
 
             $property->update([
                 'balance' => $newBalance
             ]);
 
-        }
+			$receivers[$x] = $property->user->email;
+			$x++;
+		}
 
-        $personalCharges = Charge::where([
-            'type' => 3,
-            'invoice_id' => $invoice->id
-        ])->get();
-
-        foreach($personalCharges as $charge){
-
-            $property = Property::findOrFail($charge->propertyId);
-            $oldBalance = $property->balance;
-            $balance = $oldBalance - $charge->amount;
-            $property->update([
-                'balance' => $balance
-            ]);
-
-        } */
+		Mail::to($receivers)->send(new SendInvoiceNotification($invoice->id));
 
         if($invoice != null){
             return ApiHelpers::ApiResponse(200, 'Succesfully completed', $invoice);
