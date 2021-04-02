@@ -2,11 +2,8 @@
 
 namespace App\Http\Controllers\Invoice;
 
-use Carbon\Carbon;
-use App\Models\Charge;
 use GuzzleHttp\Client;
 use App\Models\Invoice;
-use App\Models\Payment;
 use App\Models\Property;
 use App\Models\Residence;
 use App\Helpers\ApiHelpers;
@@ -93,10 +90,14 @@ class InvoiceController extends Controller {
 			$shouldBePayed += $actInvoice->total * ($property->alicuota/100);
 		}
 
-		if( ($invoice->total * ($property->alicuota/100) ) >= ($payed - $shouldBePayed)){
-			$response = false;
-		}else{
-			$response = true;
+        if( ($invoice->total * ($property->alicuota/100) ) > ($payed - $shouldBePayed)){
+            $response = false;
+        }
+        elseif( ($payed - $shouldBePayed) >= ($invoice->total * ($property->alicuota/100) ) ){
+            $response = true;
+        }
+		else{
+			$response = null;
 		}
 
 		return ApiHelpers::ApiResponse(200, 'Succesfully completed', $response);

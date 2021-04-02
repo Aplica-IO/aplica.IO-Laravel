@@ -6,12 +6,10 @@ use App\Models\Charge;
 use GuzzleHttp\Client;
 use App\Models\Invoice;
 use App\Models\Property;
-use App\Models\Residence;
 use App\Helpers\ApiHelpers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Date;
  
 class ChargeController extends Controller {
     /**
