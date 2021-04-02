@@ -90,14 +90,10 @@ class InvoiceController extends Controller {
 			$shouldBePayed += $actInvoice->total * ($property->alicuota/100);
 		}
 
-        if( number_format(($invoice->total * ($property->alicuota/100) )) > number_format(($payed - $shouldBePayed))){
-            $response = false;
-        }
-        elseif( number_format(($payed - $shouldBePayed), 2) >= number_format(($invoice->total * ($property->alicuota/100) ), 2) ){
-            $response = true;
-        }
-		else{
-			$response = null;
+		if( ($invoice->total * ($property->alicuota/100) ) >= ($payed - $shouldBePayed)){
+			$response = false;
+		}else{
+			$response = true;
 		}
 
 		return ApiHelpers::ApiResponse(200, 'Succesfully completed', $response);
