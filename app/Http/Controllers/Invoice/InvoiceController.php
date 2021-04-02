@@ -93,7 +93,10 @@ class InvoiceController extends Controller {
         if( ($invoice->total * ($property->alicuota/100) ) > ($payed - $shouldBePayed)){
             $response = false;
         }
-        elseif( ($payed - $shouldBePayed) >= ($invoice->total * ($property->alicuota/100) ) ){
+        elseif( ($payed - $shouldBePayed) > ($invoice->total * ($property->alicuota/100) ) ){
+            $response = true;
+        }
+        elseif( ($payed - $shouldBePayed) == ($invoice->total * ($property->alicuota/100) ) ){
             $response = true;
         }
 		else{
