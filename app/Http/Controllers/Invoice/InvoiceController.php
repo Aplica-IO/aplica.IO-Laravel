@@ -93,10 +93,7 @@ class InvoiceController extends Controller {
         if( number_format(($invoice->total * ($property->alicuota/100) )) > number_format(($payed - $shouldBePayed))){
             $response = false;
         }
-        elseif( ($invoice->total * ($property->alicuota/100) ) < ($payed - $shouldBePayed) ){
-            $response = true;
-        }
-        elseif( number_format(($payed - $shouldBePayed), 2) == number_format(($invoice->total * ($property->alicuota/100) ), 2) ){
+        elseif( number_format(($payed - $shouldBePayed), 2) >= number_format(($invoice->total * ($property->alicuota/100) ), 2) ){
             $response = true;
         }
 		else{
