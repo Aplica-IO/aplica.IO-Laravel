@@ -6,10 +6,12 @@ use App\Models\Charge;
 use GuzzleHttp\Client;
 use App\Models\Invoice;
 use App\Models\Property;
+use App\Models\Residence;
 use App\Helpers\ApiHelpers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Date;
  
 class ChargeController extends Controller {
     /**
@@ -53,11 +55,17 @@ class ChargeController extends Controller {
         $invoice->total = $op;
         $invoice->save();
 
+        $modify_reserve = $request->modify_reserve;
+        
+
         if($charge->type == 3){
-                ApiHelpers::ModifyBalance($request->propertyId, $charge->amount);
+                ApiHelpers::ModifyBalance($request->propertyId,$charge->amount);               
             
         }else{
-            ApiHelpers::ProcessResidenceBalanceAndReserve($invoice->residence_id, $charge->amount);
+            $op = $invoice->total + $amount;
+            $invoice->total = $op;
+            $invoice->save();
+            ApiHelpers::ProcessResidenceBalanceAndReserve($invoice->residence_id,$charge->amount);
         }
 
         return ApiHelpers::ApiResponse(200, 'Successfully completed', $charge);
@@ -73,10 +81,6 @@ class ChargeController extends Controller {
         }if($invoice->currency == 2){
             $amount = $request->amount / $request->bcv;
         }
-        // general operation
-        $op = $invoice->total + $amount;
-        $invoice->total = $op;
-        $invoice->save();
         $count = count($request->properties);
         $divided = $amount / $count;
 
@@ -97,7 +101,8 @@ class ChargeController extends Controller {
             $property = Property::findOrFail($request->properties[$i]);
             
             // operation for property
-            ApiHelpers::ModifyBalance($property->id, $divided);
+            $op = ($divided * ($residence->reserve_percentage / 100) + $divided);
+            ApiHelpers::ModifyBalance($property->id,$op);
             
         }
 
