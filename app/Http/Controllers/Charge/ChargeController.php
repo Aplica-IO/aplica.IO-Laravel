@@ -51,15 +51,9 @@ class ChargeController extends Controller {
             'type' => $request->type,
             'propertyId' => $request->propertyId
         ]);
-        $op = $invoice->total + $amount;
-        $invoice->total = $op;
-        $invoice->save();
-
-        $modify_reserve = $request->modify_reserve;
-        
 
         if($charge->type == 3){
-                ApiHelpers::ModifyBalance($request->propertyId,$charge->amount);               
+            ApiHelpers::ModifyBalance($request->propertyId,$charge->amount);
             
         }else{
             $op = $invoice->total + $amount;

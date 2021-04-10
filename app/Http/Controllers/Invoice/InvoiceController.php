@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers\Invoice;
 
-use Carbon\Carbon;
 use App\Models\Charge;
 use GuzzleHttp\Client;
 use App\Models\Invoice;
-use App\Models\Payment;
 use App\Models\Property;
 use App\Models\Residence;
 use App\Helpers\ApiHelpers;
@@ -79,7 +77,7 @@ class InvoiceController extends Controller {
 		->get();
 
 		$property = Property::findOrFail($property_id);
-		$charges = Charges::where(['type'=>3, 'propertyId'=>$property_id])->get();
+		$charges = Charge::where(['type'=>3, 'propertyId'=>$property_id])->get();
 
 		$shouldBePayedIndividual = 0;
 		foreach($charges as $charge){
@@ -91,7 +89,8 @@ class InvoiceController extends Controller {
 			$shouldBePayed += $actInvoice->total * ($property->alicuota/100);
 		}
 
-		$totalShouldBePayed = $shouldBePayed + $shouldBePayedIndividual;
+        $WithReserve =  ($shouldBePayed * ($property->residence->reserve_percentage / 100));
+		$totalShouldBePayed = $shouldBePayed + $shouldBePayedIndividual + $WithReserve;
 
 		$payed = 0;
 		foreach($property->payments as $payment){
@@ -101,13 +100,13 @@ class InvoiceController extends Controller {
 			}
 		}
 
-		if($totalShouldBePayed < $payed){
-			$response = false;
-		}else{
+		if($totalShouldBePayed <= $payed){
 			$response = true;
+		}else{
+			$response = false;
 		}
 
-		return ApiHelpers::ApiResponse(200, 'Succesfully completed', $response);
+		return ApiHelpers::ApiResponse(200, 'Succesfully completed', [$response, $totalShouldBePayed, $payed]);
 
 	}
 
@@ -141,7 +140,6 @@ class InvoiceController extends Controller {
 
 	public function showThroughResidence($id) {
 		$invoice = Invoice::with(['charges', 'residence'])->where('residence_id', $id)
-			->where('is_active', 0)
 			->orderBy('id', 'desc')->get();
 		if ($invoice->all() == null) {
 			return ApiHelpers::ApiResponse(404, '404 not found', null);
