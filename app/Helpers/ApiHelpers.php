@@ -61,12 +61,12 @@ class ApiHelpers {
             $balanceOld = $balanceOld + $property->balance;
             $property = Property::findOrFail($property->id);
             $hasToPay = ($property->alicuota / 100) * $amount;
-            // $reservePercentage = $residence->reserve_percentage / 100;
-            // $op = ($hasToPay * $reservePercentage) + $hasToPay;
-            $property->balance -= $hasToPay;
+            $reservePercentage = $residence->reserve_percentage / 100;
+            $op = ($hasToPay * $reservePercentage) + $hasToPay;
+            $property->balance -= $op;
             $property->save();
             $balanceNew = $balanceNew + $property->balance;
-        }
+        } 
         if($balanceNew < 0 || $balance = 0){
             $op = ($balanceOld + $residence->reserve);
             $residence->reserve =  $op - $amount;
