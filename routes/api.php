@@ -110,4 +110,5 @@ Route::prefix('')->group(function () {
     Route::get('bcv-price', 'Charge\ChargeController@dolarPrice');//Correct//
     // Create payment confirmed
     Route::post('payment-confirmed', 'Payment\PaymentController@createAndConfirm');
+    Route::apiResource('prontopago', 'ProntoPagoController');
 });

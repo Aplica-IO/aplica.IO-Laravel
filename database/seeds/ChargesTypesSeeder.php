@@ -15,6 +15,7 @@ class ChargesTypesSeeder extends Seeder
             ['charge_name' => 'Gastos comunes'],
             ['charge_name' => 'Gastos no comunes'],
             ['charge_name' => 'Gastos Personales'],
+            ['charge_name' => 'ProntoPago'],
         ];
         DB::table('charges_types')->insert($charge_types);
     }
