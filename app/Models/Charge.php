@@ -41,4 +41,8 @@ class Charge extends Model {
 	public function invoice() {
 		return $this->belongsTo(Invoice::class);
 	}
+
+	public function pronto_pagos() {
+		return $this->hasMany(ProntoPago::class);
+	}
 }

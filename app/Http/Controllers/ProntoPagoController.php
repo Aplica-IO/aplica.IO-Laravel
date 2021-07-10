@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\ApiHelpers;
+use Carbon\Carbon;
 use App\Models\Charge;
+use App\Models\Property;
 use App\Models\Residence;
 use App\Models\ProntoPago;
+use App\Helpers\ApiHelpers;
 use Illuminate\Http\Request;
 
 class ProntoPagoController extends Controller
@@ -47,6 +49,8 @@ class ProntoPagoController extends Controller
             'spend_date' => $request->command_date,
             'type' => 4
         ]);
+        $charge->invoice->percentage_prontopago = $request->percentage_prontopago;
+        $charge->invoice->save();
         // Bring all properties by residence
         // Bc needs to take all alicuota to create prontoPago item
         $residence = Residence::findOrFail($request->residence_id);
@@ -59,7 +63,8 @@ class ProntoPagoController extends Controller
                 'property_id' => $property->id,
                 'invoice_id' => $request->invoice_id,
                 'amount' => $amount,
-                'command_date' => $request->command_date
+                'command_date' => $request->command_date,
+                'charge_id' => $charge->id
             ]);
             array_push($pronto, $prontoQuery);
         }

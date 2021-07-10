@@ -7,6 +7,7 @@ use GuzzleHttp\Client;
 use App\Models\Invoice;
 use App\Models\Property;
 use App\Models\Residence;
+use App\Models\ProntoPago;
 use App\Helpers\ApiHelpers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,7 @@ class InvoiceController extends Controller {
 	 * @return \Illuminate\Http\JsonResponse
 	 */
 	public function index() {
-		$index = Invoice::with('residence')->paginate(200);
+		$index = Invoice::with('residence','pronto_pagos')->paginate(200);
 		return ApiHelpers::ApiResponse(200, 'Successfully completed', $index);
 	}
 
@@ -57,7 +58,7 @@ class InvoiceController extends Controller {
 	 * @return \Illuminate\Http\JsonResponse
 	 */
 	public function show($id) {
-		$invoice = Invoice::with(['currency','residence', 'charges'])->findOrFail($id);
+		$invoice = Invoice::with(['currency','residence', 'charges','pronto_pagos'])->findOrFail($id);
 
 		return ApiHelpers::ApiResponse(200, 'Succesfully completed', [
 			'invoice' => $invoice,
@@ -78,6 +79,7 @@ class InvoiceController extends Controller {
 
 		$property = Property::findOrFail($property_id);
 		$charges = Charge::where(['type'=>3, 'propertyId'=>$property_id])->get();
+		$prontopagos = ProntoPago::where(['is_applied'=>true, 'property_id'=>$property_id])->get();
 
 		$shouldBePayedIndividual = 0;
 		foreach($charges as $charge){
@@ -89,14 +91,18 @@ class InvoiceController extends Controller {
 			$shouldBePayed += $actInvoice->total * ($property->alicuota/100);
 		}
 
+		$shouldPayProntoPago = 0;
+		foreach($prontopagos as $pronto){
+			$shouldPayProntoPago += $pronto->amount;
+		}
+                                                                                                           
         $WithReserve =  ($shouldBePayed * ($property->residence->reserve_percentage / 100));
-		$totalShouldBePayed = $shouldBePayed + $shouldBePayedIndividual + $WithReserve;
+		$totalShouldBePayed = $shouldBePayed + $shouldBePayedIndividual + $WithReserve + $shouldPayProntoPago;
 
 		$payed = 0;
 		foreach($property->payments as $payment){
 			if($payment->status === 2){
 				$payed += $payment->amount_payed;
-
 			}
 		}
 
