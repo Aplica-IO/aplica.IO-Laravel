@@ -15,7 +15,7 @@ class Invoice extends Model {
 	 */
 	protected $fillable = [
 		'ref_code', 'total', 'residence_id','status_id',
-		'date', 'currency', 'prontopago', 'is_active'
+		'date', 'currency', 'prontopago', 'is_active','percentage_prontopago'
 	];
 
 	public $timestamps = false;
@@ -63,6 +63,13 @@ class Invoice extends Model {
 	 */
 	public function currency() {
 		return $this->belongsTo(Currency::class, 'currency');
+	}
+
+	/**
+	 * Get pronto pagos of the invoice.
+	 */
+	public function pronto_pagos() {
+		return $this->hasMany(ProntoPago::class);
 	}
 
 }

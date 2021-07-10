@@ -10,7 +10,7 @@ class ProntoPago extends Model
 {
     protected $fillable = [
         'property_id', 'invoice_id', 'command_date', 'amount',
-        'name', 'bcv', 'invoice_id', 'spend_date', 'residence_id'
+        'residence_id', 'charge_id', 'is_applied'
     ];
 
     public function property() {
@@ -20,4 +20,8 @@ class ProntoPago extends Model
     public function invoice() {
         return $this->belongsTo(Invoice::class);
     }
+
+    public function charge() {
+		return $this->belongsTo(Charge::class);
+	}
 }
