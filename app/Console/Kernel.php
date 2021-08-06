@@ -13,7 +13,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        'App\Console\Commands\checkProntoPagos'
+        //'App\Console\Commands\checkProntoPagos'
     ];
 
     /**
@@ -24,7 +24,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('check:pronto_pagos')->daily();
+        //$schedule->command('check:pronto_pagos')->daily();
     }
 
     /**

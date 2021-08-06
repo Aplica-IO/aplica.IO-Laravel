@@ -40,7 +40,7 @@ class checkProntoPagos extends Command
      */
     public function handle()
     {
-        $prontopagos = ProntoPago::with('property')
+        /* $prontopagos = ProntoPago::with('property')
         ->whereDate('command_date', '=', Carbon::now()->format('Y-m-d'))
         ->where('is_applied',false)->limit(3500)->get();
 
@@ -54,6 +54,6 @@ class checkProntoPagos extends Command
                 $prontopagos[$key]->property->balance = $balance - $pronto->amount;
                 $prontopagos[$key]->property->save();
             }
-        }
+        } */
     }
 }

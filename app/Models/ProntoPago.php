@@ -9,8 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class ProntoPago extends Model
 {
     protected $fillable = [
-        'property_id', 'invoice_id', 'command_date', 'amount',
-        'residence_id', 'charge_id', 'is_applied'
+        'property_id', 'invoice_id', 'amount', 'residence_id', 'is_applied'
     ];
 
     public function property() {
@@ -20,8 +19,4 @@ class ProntoPago extends Model
     public function invoice() {
         return $this->belongsTo(Invoice::class);
     }
-
-    public function charge() {
-		return $this->belongsTo(Charge::class);
-	}
 }

@@ -17,9 +17,9 @@ class CreateInvoicesTable extends Migration
             $table->bigIncrements('id');
             $table->string('ref_code');
             $table->bigInteger('total')->default(0);
-            
-            //$table->boolean('prontopago')->default(false);
             $table->date('date');
+            $table->date('start')->nullable();
+            $table->date('end')->nullable();
             $table->boolean('is_active')->default(true);
             $table->unsignedBigInteger('residence_id');
             $table->unsignedBigInteger('status_id');

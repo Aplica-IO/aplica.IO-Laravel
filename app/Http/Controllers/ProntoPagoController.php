@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\Charge;
+use App\Models\Invoice;
 use App\Models\Property;
 use App\Models\Residence;
 use App\Models\ProntoPago;
@@ -40,36 +41,30 @@ class ProntoPagoController extends Controller
      */
     public function store(Request $request)
     {
-        // Create charge
-        $charge = Charge::create([
-            'invoice_id' => $request->invoice_id,
-            'bcv' => $request->bcv,
-            'name' => $request->name,
-            'amount' => $request->amount,
-            'spend_date' => $request->command_date,
-            'type' => 4
-        ]);
-        $charge->invoice->percentage_prontopago = $request->percentage_prontopago;
-        $charge->invoice->save();
         // Bring all properties by residence
-        // Bc needs to take all alicuota to create prontoPago item
-        $residence = Residence::findOrFail($request->residence_id);
-        $residence->properties;
-        $pronto = [];
+        $invoice = Invoice::findOrFail($request->invoice_id);
+        $invoice->update([
+            'start' => $request->start,
+            'end' => $request->end,
+            'percentage_prontopago' => $request->percentage_prontopago
+        ]);
         // Creating prontoPago
-        foreach ($residence->properties as $property) {
-            $amount = $request->amount * ($property->alicuota / 100);
-            $prontoQuery = ProntoPago::create([
+        $prontopagos = [];
+        foreach ($invoice->residence->properties as $property) {
+            $amount = $invoice->total * ($property->alicuota / 100);
+            $amount = ($amount + ($amount * ($invoice->residence->reserve_percentage / 100)));
+            $pronto = ProntoPago::create([
                 'property_id' => $property->id,
-                'invoice_id' => $request->invoice_id,
-                'amount' => $amount,
-                'command_date' => $request->command_date,
-                'charge_id' => $charge->id
+                'invoice_id' => $invoice->id,
+                'amount' => $amount
             ]);
-            array_push($pronto, $prontoQuery);
+            array_push($prontopagos,$pronto);
         }
-        $charge->invoice;
-        return ApiHelpers::ApiResponse('200', 'Created Successfully', [$pronto, $charge]);
+        return ApiHelpers::ApiResponse('200', 'Created Successfully', [
+            'invoice' => $invoice,
+            'residence' => $invoice->residence,
+            'prontopagos' => $prontopagos
+        ]);
 
     }
 

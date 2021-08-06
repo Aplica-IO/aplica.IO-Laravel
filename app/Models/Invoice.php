@@ -15,7 +15,7 @@ class Invoice extends Model {
 	 */
 	protected $fillable = [
 		'ref_code', 'total', 'residence_id','status_id',
-		'date', 'currency', 'prontopago', 'is_active','percentage_prontopago'
+		'date', 'currency', 'is_active','percentage_prontopago','start','end'
 	];
 
 	public $timestamps = false;

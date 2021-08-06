@@ -71,48 +71,53 @@ class InvoiceController extends Controller {
 
 	public function checkIfPayed($invoice_id,$property_id) {
 
-		$invoice = Invoice::findOrFail($invoice_id);
-		$invoices = DB::table('invoices')
-		->where(['residence_id'=>$invoice->residence->id])
-		->where('id','<=',$invoice->id)
-		->get();
-
+		$invoices = Invoice::where(['residence_id'=>$invoice->residence->id])->where('id','<=',$invoice->id)->get();
+		
 		$property = Property::findOrFail($property_id);
-		$charges = Charge::where(['type'=>3, 'propertyId'=>$property_id])->get();
-		$prontopagos = ProntoPago::where(['is_applied'=>true, 'property_id'=>$property_id])->get();
-
-		$shouldBePayedIndividual = 0;
-		foreach($charges as $charge){
-			$shouldBePayedIndividual += $charge->amount;
-		}
-
-		$shouldBePayed = 0;
-		foreach($invoices as $actInvoice){
-			$shouldBePayed += $actInvoice->total * ($property->alicuota/100);
-		}
-
-		$shouldPayProntoPago = 0;
-		foreach($prontopagos as $pronto){
-			$shouldPayProntoPago += $pronto->amount;
-		}
-                                                                                                           
-        $WithReserve =  ($shouldBePayed * ($property->residence->reserve_percentage / 100));
-		$totalShouldBePayed = $shouldBePayed + $shouldBePayedIndividual + $WithReserve + $shouldPayProntoPago;
-
+		
 		$payed = 0;
 		foreach($property->payments as $payment){
 			if($payment->status === 2){
-				$payed += $payment->amount_payed;
+				$payed -= $payment->amount_payed;
+			}
+		}
+		$is_payed = false;
+		$prontopago = false;
+		foreach($invoices as $invoice){
+			$op = $invoice->total * ($property->alicuota / 100);
+			$reserve = ($property->residence->reserve_percentage / 100);
+			$total = $op + ($reserve * $op);
+			if($invoice->pronto_pagos){
+				$pronto = ProntoPago::where(['invoice_id'=>$invoice->id,'property_id'=>$property->id])->first();
+				if($pronto->is_applied){
+					$percentage = ($invoice->percentage_prontopago / 100);
+					$payed -= ($total * $percentage);
+				}else{
+					$payed -= $total;
+				}
+			}else{
+				$payed -= $total;
+			}
+			$charge = Charge::where(['type'=>3, 'propertyId'=>$property_id, 'invoice_id'=>$invoice->id])->first();
+			if($charge){
+				$payed -= $charge->amount;
+			}
+			if($payed >= 0 && $invoice->id == $invoice_id){
+				$is_payed = true;
+				if($invoice->pronto_pagos){
+					$pronto = ProntoPago::where(['invoice_id'=>$invoice->id,'property_id'=>$property->id])->first();
+					if($pronto->is_applied){
+						$prontopago = true;
+					}
+				}
 			}
 		}
 
-		if($totalShouldBePayed <= $payed){
-			$response = true;
-		}else{
-			$response = false;
-		}
-
-		return ApiHelpers::ApiResponse(200, 'Succesfully completed', [$response, $totalShouldBePayed, $payed]);
+		$totalShouldBePayed = $shouldBePayed + $shouldBePayedIndividual;
+		return ApiHelpers::ApiResponse(200, 'Succesfully completed', [
+			'is_payed' => $is_payed,
+			'prontopago' => $prontopago
+		]);
 
 	}
 

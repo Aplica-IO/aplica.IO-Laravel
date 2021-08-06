@@ -35,12 +35,13 @@ class ChargeController extends Controller {
     public function store(Request $request) {
         
         $invoice = Invoice::findOrFail($request->invoice_id);
+        $amount = 0;
         if($invoice->currency == 1){
             $amount = $request->amount;
-        }if($invoice->currency == 2){
+        }
+        if($invoice->currency == 2){
             $amount = $request->amount / $request->bcv;
         }
-
         $charge = Charge::create([
             'invoice_id' => $request->invoice_id,
             'amount' => $amount,
@@ -51,7 +52,7 @@ class ChargeController extends Controller {
             'type' => $request->type,
             'propertyId' => $request->propertyId
         ]);
-
+        
         if($charge->type == 3){
             ApiHelpers::ModifyBalance($request->propertyId,$charge->amount);
             
@@ -59,7 +60,7 @@ class ChargeController extends Controller {
             $op = $invoice->total + $amount;
             $invoice->total = $op;
             $invoice->save();
-            ApiHelpers::ProcessResidenceBalanceAndReserve($invoice->residence_id,$charge->amount);
+            ApiHelpers::ProcessResidenceBalanceAndReserve($charge);
         }
 
         return ApiHelpers::ApiResponse(200, 'Successfully completed', $charge);
@@ -138,8 +139,14 @@ class ChargeController extends Controller {
      */
     public function destroy($id) {
         $charge = Charge::with(['invoice'])->where('id',$id)->first();
-        $amount = $charge->amount;
-        $total = $charge->invoice->total - $amount;
+        foreach($charge->invoice->residence->properties as $property){
+            $hasToPay = ($property->alicuota / 100) * $charge->amount;
+            $reservePercentage = $charge->invoice->residence->reserve_percentage / 100;
+            $op = ($hasToPay * $reservePercentage) + $hasToPay;
+            $property->balance += $op;
+            $property->save();
+        } 
+        $total = $charge->invoice->total - $charge->amount;
         $charge->invoice->update([
             'total' => $total
         ]);
