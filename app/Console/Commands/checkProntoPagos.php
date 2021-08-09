@@ -40,8 +40,8 @@ class checkProntoPagos extends Command
      */
     public function handle()
     {
-        $prontopagos = ProntoPago::with('property')
-        ->whereDate('command_date', '=', Carbon::now()->sub('4 hours')->format('Y-m-d'))
+        /* $prontopagos = ProntoPago::with('property')
+        ->whereDate('command_date', '=', Carbon::now()->format('Y-m-d'))
         ->where('is_applied',false)->limit(3500)->get();
 
         foreach($prontopagos as $key=>$pronto){
@@ -56,6 +56,5 @@ class checkProntoPagos extends Command
                 $prontopagos[$key]->property->save();
             }
         }
-        return [Carbon::now()->format('Y-m-d')];
     }
 }

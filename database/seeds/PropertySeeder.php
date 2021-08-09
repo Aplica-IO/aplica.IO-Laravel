@@ -23,7 +23,7 @@ class PropertySeeder extends Seeder {
                 'balance' => 0,
 				'alicuota' => 3.25,
 				'is_active' => true,
-				'residence_id' => 2,
+				'residence_id' => 1,
 				'user_id' => 4,
 			],
 		];

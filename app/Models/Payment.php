@@ -11,7 +11,7 @@ class Payment extends Model {
 	 * @var array
 	 */
 	protected $fillable = [
-		'amount_payed', 'id_method', 'bank', 'status',
+		'amount_payed', 'id_method', 'bank', 'status', 'prontopago',
 		'property_id', 'transaction_ref','bcv', 'currency_id'
 	];
 

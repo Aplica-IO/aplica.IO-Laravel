@@ -53,28 +53,22 @@ class ApiHelpers {
         $property->save();
     }
 
-    public static function ProcessResidenceBalanceAndReserve($id,$amount){
+    public static function ProcessResidenceBalanceAndReserve($charge){
         $balanceOld = 0;
-        $balanceNew = 0;
-        $residence = Residence::with(['properties'])->where('id', $id)->first();
-        foreach($residence->properties as $property){
-            $balanceOld = $balanceOld + $property->balance;
-            $property = Property::findOrFail($property->id);
-            $hasToPay = ($property->alicuota / 100) * $amount;
-            $reservePercentage = $residence->reserve_percentage / 100;
+        foreach($charge->invoice->residence->properties as $property){
+            $balanceOld += $property->balance;
+            $hasToPay = ($property->alicuota / 100) * $charge->amount;
+            $reservePercentage = $charge->invoice->residence->reserve_percentage / 100;
             $op = ($hasToPay * $reservePercentage) + $hasToPay;
             $property->balance -= $op;
             $property->save();
-            $balanceNew = $balanceNew + $property->balance;
         } 
-        if($balanceNew < 0 || $balance = 0){
-            $op = ($balanceOld + $residence->reserve);
-            $residence->reserve =  $op - $amount;
-            $residence->save();
-            return [$op, $amount, $amount - $op, $residence];
+        if($balanceOld < $charge->amount){
+            $charge->invoice->residence->reserve -=  ($charge->amount - $balanceOld);
+            $charge->invoice->residence->save();
         }
     }
-    /* public static function ProcessOnlyResidenceBalance($id,$amount){
+    public static function ProcessOnlyResidenceBalance($id,$amount){
         $balance = 0;
         $residence = Residence::with(['properties'])->first();
         foreach($residence->properties as $property){
@@ -84,8 +78,9 @@ class ApiHelpers {
             $property->save();
             $balance += $property->balance;
         }
-        if($property->balance < $amount){
-            $residence->reserve -= ($amount - $property->balance);
+        if($balance < 0){
+            $residence->reserve += $balance;
+            $residence->save();
         }
-    } */
+    }
 }

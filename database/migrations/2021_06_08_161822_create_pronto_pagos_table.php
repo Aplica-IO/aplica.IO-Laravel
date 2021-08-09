@@ -22,9 +22,10 @@ class CreateProntoPagosTable extends Migration
             $table->timestamps();
 
             $table->foreign('property_id')->references('id')->on('properties')
-                ->onUpdate('cascade')->onDelete('cascade');
+            ->onUpdate('cascade')->onDelete('cascade');
+
             $table->foreign('invoice_id')->references('id')->on('invoices')
-                ->onUpdate('cascade')->onDelete('cascade');
+            ->onUpdate('cascade')->onDelete('cascade');
         });
     }
 

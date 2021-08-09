@@ -15,6 +15,7 @@ class CreatePaymentsTable extends Migration {
 			$table->bigIncrements('id');
 			$table->float('amount_payed');
 			$table->bigInteger('bcv')->nullable();
+			$table->boolean('prontopago');
 			$table->unsignedBigInteger('bank');
 			$table->unsignedBigInteger('id_method');
 			$table->unsignedBigInteger('status');

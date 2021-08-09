@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Payment;
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Property;
 use App\Models\Residence;
+use App\Models\ProntoPago;
 use App\Helpers\ApiHelpers;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -32,7 +34,7 @@ class PaymentController extends Controller {
 	 * @return JsonResponse
 	 */
 	public function store(Request $request) {
-
+		$date = Carbon::now();
 		$client = new Client([
 			'base_uri' => 'https://s3.amazonaws.com',
 		]);
@@ -40,16 +42,18 @@ class PaymentController extends Controller {
 		$res = $client->request('GET', 'dolartoday/data.json');
 		$sicad = json_decode(mb_convert_encoding($res->getBody()->getContents(), 'UTF-8', 'UTF-8'))->USD->sicad2;
 		$dolarPrice = $sicad == null ? json_decode(mb_convert_encoding($res->getBody()->getContents(), 'UTF-8', 'UTF-8'))->USD->transferencia : $sicad;
-		
+		$amount_payed = 0;
 		if($request->currency_id == 1){
 			$amount_payed = $request->amount_payed;
 		}if($request->currency_id == 2){
 			$amount_payed = $request->amount_payed / $dolarPrice;
 		}
 
+		
 		$data = [
 			'amount_payed' => $amount_payed,
 			'bcv' => $dolarPrice,
+			'prontopago' => false,
 			'transaction_ref' => $request->transaction_ref,
 			'id_method' => $request->id_method,
 			'bank' => $request->bank,
@@ -57,10 +61,26 @@ class PaymentController extends Controller {
 			'property_id' => $request->property_id,
             'currency_id' => $request->currency_id
 		];
+		
+		$payment = Payment::create($data);
+		$invoice = Invoice::orderBy('created_at','desc')->first();
+		$percentage = $invoice->residence->reserve_percentage / 100;
+		$amount = ($invoice->total * ($payment->property->alicuota / 100));
+		$shouldPay = round(-1 * (($amount * $percentage) + $amount),2);
 
-		$store = Payment::create($data);
+		if(count($invoice->pronto_pagos) > 0 && $invoice->start < $date && $date < $invoice->end && $payment->property->balance >= $shouldPay){
+			$payment->update([
+				'prontopago' => true
+			]);
+			ProntoPago::where([
+				'invoice_id'=>$invoice->id,
+				'property_id'=>$payment->property->id
+				])->update([
+					'is_applied' => true
+				]);
+		}
 
-		return ApiHelpers::ApiResponse(200, 'Succesfully completed', $store);
+		return ApiHelpers::ApiResponse(200, 'Succesfully completed', $payment);
 	}
 
 	/**
@@ -170,28 +190,32 @@ class PaymentController extends Controller {
 
 	public function confirmPayment($id) {
 
-		$payment = Payment::with(['property'])->where('id',$id)->first();
+		$payment = Payment::findOrFail($id);
 
 		$payment->update([
 			'status' => 2
 		]);
-
 		$payed = $payment->amount_payed;
+		$newBalance = 0;
+		$invoice = Invoice::where('residence_id',$payment->property->residence->id)->orderBy('created_at','desc')->first();
+		$reserve = $invoice->residence->reserve_percentage / 100;
+		$amount = 0;
+		if($payment->prontopago){
+			$percentage_prontopago = $invoice->percentage_prontopago / 100;
+			$amount = ($invoice->total * ($payment->property->alicuota / 100));
+			$amountReserve = $amount + ($amount * $reserve);
+			$total = $amountReserve * $percentage_prontopago;
+			$newBalance = $payment->property->balance + $payed + $total;
+		}else{
+			$newBalance = $payment->property->balance + $payed;
+		}
 
-		$newBalance = $payment->property->balance + $payed;
+		$invoice->residence->reserve += ($amount * $reserve);
+		$invoice->residence->save();
 
 		$payment->property->update([
 			'balance' => $newBalance
 		]);
-
-        $property = Property::findOrFail($payment->property_id);
-        $residence = Residence::findOrFail($property->residence_id);
-
-        $newReserve = $residence->reserve + ($payed * ($residence->reserve_percentage / 100));
-
-        $residence->update([
-            'reserve' => $newReserve
-        ]);
 
 		return ApiHelpers::ApiResponse(200, 'Succesfully completed', $payment);
 	}
