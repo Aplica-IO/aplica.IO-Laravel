@@ -20,6 +20,11 @@ class CreateProntoPagosTable extends Migration
             $table->boolean('is_applied')->default(false);
             $table->double('amount', '9', '2');
             $table->timestamps();
+
+            $table->foreign('property_id')->references('id')->on('properties')
+                ->onUpdate('cascade')->onDelete('cascade');
+            $table->foreign('invoice_id')->references('id')->on('invoices')
+                ->onUpdate('cascade')->onDelete('cascade');
         });
     }
 

@@ -41,12 +41,13 @@ class checkProntoPagos extends Command
     public function handle()
     {
         $prontopagos = ProntoPago::with('property')
-        ->whereDate('command_date', '=', Carbon::now()->format('Y-m-d'))
+        ->whereDate('command_date', '=', Carbon::now()->sub('4 hours')->format('Y-m-d'))
         ->where('is_applied',false)->limit(3500)->get();
 
         foreach($prontopagos as $key=>$pronto){
             if($pronto->property->balance >= 0){
                 $prontopagos[$key]->delete();
+                $prontopagos[$key]->property->save();
             }else{
                 $prontopagos[$key]->is_applied = true;
                 $prontopagos[$key]->save();
@@ -55,5 +56,6 @@ class checkProntoPagos extends Command
                 $prontopagos[$key]->property->save();
             }
         }
+        return [Carbon::now()->format('Y-m-d')];
     }
 }

@@ -10,7 +10,7 @@ class ProntoPago extends Model
 {
     protected $fillable = [
         'property_id', 'invoice_id', 'command_date', 'amount',
-        'residence_id', 'charge_id', 'is_applied'
+        'residence_id', 'charge_id', 'percentage_prontopago'
     ];
 
     public function property() {

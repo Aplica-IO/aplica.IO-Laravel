@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Invoice;
 use Carbon\Carbon;
 use App\Models\Charge;
 use App\Models\Property;
@@ -15,11 +16,11 @@ class ProntoPagoController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index()
     {
-        //
+        return ApiHelpers::ApiResponse('200', 'á', [Carbon::now()->sub('4 hours')->format('Y-m-d')]);
     }
 
     /**
@@ -40,12 +41,15 @@ class ProntoPagoController extends Controller
      */
     public function store(Request $request)
     {
+        //  Get invoice
+        $invoice = Invoice::findOrFail($request->invoice_id);
         // Create charge
+        $total = ($request->percentage_prontopago / 100) * $invoice->total;
         $charge = Charge::create([
             'invoice_id' => $request->invoice_id,
             'bcv' => $request->bcv,
-            'name' => $request->name,
-            'amount' => $request->amount,
+            'name' => 'Gasto de ProntoPago',
+            'amount' => $total,
             'spend_date' => $request->command_date,
             'type' => 4
         ]);
@@ -58,7 +62,7 @@ class ProntoPagoController extends Controller
         $pronto = [];
         // Creating prontoPago
         foreach ($residence->properties as $property) {
-            $amount = $request->amount * ($property->alicuota / 100);
+            $amount = $total * ($property->alicuota / 100);
             $prontoQuery = ProntoPago::create([
                 'property_id' => $property->id,
                 'invoice_id' => $request->invoice_id,
