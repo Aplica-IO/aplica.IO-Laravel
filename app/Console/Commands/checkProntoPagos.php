@@ -55,6 +55,6 @@ class checkProntoPagos extends Command
                 $prontopagos[$key]->property->balance = $balance - $pronto->amount;
                 $prontopagos[$key]->property->save();
             }
-        }
+        } */
     }
 }
