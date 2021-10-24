@@ -16,15 +16,7 @@ class AddressSeeder extends Seeder {
 				'zip_code' => '2001',
 				'country_id' => 1,
 				'state_id' => 7,
-				'city_id' => 115
-			],
-			[
-				'location' => 'Delray beach',
-				'street' => 'Street 56th Flowers',
-				'zip_code' => '305',
-				'country_id' => 1,
-				'state_id' => 26,
-				'city_id' => 499
+				'city_id' => 7
 			],
 		];
 

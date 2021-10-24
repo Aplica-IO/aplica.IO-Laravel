@@ -22,6 +22,8 @@ class StateSeeder extends Seeder
             ['name' => 'Carabobo'],
             ['name' => 'Cojedes'],
             ['name' => 'Delta Amacuro'],
+            ['name' => 'Dependencias Federales'],
+            ['name' => 'Distrito Capital'],
             ['name' => 'Falcón'],
             ['name' => 'Guárico'],
             ['name' => 'Lara'],
@@ -36,11 +38,9 @@ class StateSeeder extends Seeder
             ['name' => 'Vargas'],
             ['name' => 'Yaracuy'],
             ['name' => 'Zulia'],
-            ['name' => 'Distrito Capital'],
-            ['name' => 'Dependencias Federales'],
             ['name' => 'Florida'],
         ];
 
         DB::table('states')->insert($states);
-    }
+    } 
 }

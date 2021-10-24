@@ -17,13 +17,6 @@ class ResidenceSeeder extends Seeder {
 				'auditor_id' => 2,
 				'community_type' => 1,
 			],
-			[
-				'name' => 'El Paraiso',
-				'nif' => 'DCBA4321',
-				'address_id' => 2,
-				'auditor_id' => 2,
-				'community_type' => 1,
-			],
 		];
 
 		DB::table('residences')->insert($residences);
