@@ -47,6 +47,7 @@ class checkProntoPagos extends Command
         foreach($prontopagos as $key=>$pronto){
             if($pronto->property->balance >= 0){
                 $prontopagos[$key]->delete();
+                $prontopagos[$key]->property->save();
             }else{
                 $prontopagos[$key]->is_applied = true;
                 $prontopagos[$key]->save();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Invoice;
 use Carbon\Carbon;
 use App\Models\Charge;
 use App\Models\Invoice;
@@ -16,11 +17,11 @@ class ProntoPagoController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index()
     {
-        //
+        return ApiHelpers::ApiResponse('200', 'á', [Carbon::now()->sub('4 hours')->format('Y-m-d')]);
     }
 
     /**
