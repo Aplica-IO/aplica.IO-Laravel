@@ -76,3 +76,8 @@ fabric.properties
 # modules.xml
 # .idea/misc.xml
 # *.ipr
+public/.DS_Store
+
+resources/.DS_Store
+
+storage/.DS_Store
