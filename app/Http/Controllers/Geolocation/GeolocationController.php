@@ -99,7 +99,7 @@ class GeolocationController extends ApiController
      */
     public function states(Request $request)
     {
-        return $this->ApiResponse(200, 'Successfully completed', State::all());
+        return $this->ApiResponse(200, 'Successfully completed', State::with('cities')->get());
     }
 
     /**
@@ -109,6 +109,6 @@ class GeolocationController extends ApiController
      */
     public function cities(Request $request)
     {
-        return $this->ApiResponse(200, 'Successfully completed', City::all());
+        return $this->ApiResponse(200, 'Successfully completed', City::with('state')->get());
     }
 }

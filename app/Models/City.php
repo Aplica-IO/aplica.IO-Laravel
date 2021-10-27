@@ -32,4 +32,8 @@ class City extends Model
    {
     return $this->hasMany(Address::class);
    }
+   public function state()
+   {
+    return $this->belongsTo(State::class);
+   }
 }
