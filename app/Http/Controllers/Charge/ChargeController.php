@@ -80,6 +80,8 @@ class ChargeController extends Controller {
         $divided = $amount / $count;
 
         // operation for each property
+        $charges = [];
+        $balances = [];
         for($i=0;$i < $count;$i++){
             // creating charge
             $charge = Charge::create([
@@ -91,17 +93,18 @@ class ChargeController extends Controller {
                 'spend_date' => $request->spend_date,
                 'type' => 3,
                 'propertyId' => $request->properties[$i]
-            ]); 
+            ]);
             // get property and residence
             $property = Property::findOrFail($request->properties[$i]);
             
             // operation for property
-            $op = ($divided * ($residence->reserve_percentage / 100) + $divided);
-            ApiHelpers::ModifyBalance($property->id,$op);
-            
+            $op = ($divided * ($invoice->residence->reserve_percentage / 100) + $divided);
+            $balance = ApiHelpers::ModifyBalance($property->id,$op);
+            array_push($balances, $balance);
+            array_push($charges, $charge);
         }
 
-        return ApiHelpers::ApiResponse(200, 'Successfully completed', [$property, $charge]);
+        return ApiHelpers::ApiResponse(200, 'Successfully completed', [$property, $charges, $balances]);
     }
 
     /**

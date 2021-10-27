@@ -51,6 +51,7 @@ class ApiHelpers {
         $property = Property::findOrFail($id);
         $property->balance -= $amount;
         $property->save();
+        return $property;
     }
 
     public static function ProcessResidenceBalanceAndReserve($charge){
