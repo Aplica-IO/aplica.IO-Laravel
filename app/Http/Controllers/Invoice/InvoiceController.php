@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Invoice;
 
+use Carbon\Carbon;
 use App\Models\Charge;
 use GuzzleHttp\Client;
 use App\Models\Invoice;
@@ -71,6 +72,8 @@ class InvoiceController extends Controller {
 
 	public function checkIfPayed($invoice_id,$property_id) {
 
+		$invoice = Invoice::findOrFail($invoice_id);
+
 		$invoices = Invoice::where(['residence_id'=>$invoice->residence->id])->where('id','<=',$invoice->id)->get();
 		
 		$property = Property::findOrFail($property_id);
@@ -78,7 +81,7 @@ class InvoiceController extends Controller {
 		$payed = 0;
 		foreach($property->payments as $payment){
 			if($payment->status === 2){
-				$payed -= $payment->amount_payed;
+				$payed += $payment->amount_payed;
 			}
 		}
 		$is_payed = false;
@@ -92,6 +95,7 @@ class InvoiceController extends Controller {
 				if($pronto->is_applied){
 					$percentage = ($invoice->percentage_prontopago / 100);
 					$payed -= ($total * $percentage);
+					$prontopago = true;
 				}else{
 					$payed -= $total;
 				}
@@ -104,16 +108,9 @@ class InvoiceController extends Controller {
 			}
 			if($payed >= 0 && $invoice->id == $invoice_id){
 				$is_payed = true;
-				if($invoice->pronto_pagos){
-					$pronto = ProntoPago::where(['invoice_id'=>$invoice->id,'property_id'=>$property->id])->first();
-					if($pronto->is_applied){
-						$prontopago = true;
-					}
-				}
 			}
 		}
 
-		$totalShouldBePayed = $shouldBePayed + $shouldBePayedIndividual;
 		return ApiHelpers::ApiResponse(200, 'Succesfully completed', [
 			'is_payed' => $is_payed,
 			'prontopago' => $prontopago

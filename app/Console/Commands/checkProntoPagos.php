@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Carbon\Carbon;
+use App\Models\Invoice;
 use App\Models\Property;
 use App\Models\ProntoPago;
 use Illuminate\Console\Command;
@@ -40,20 +41,15 @@ class checkProntoPagos extends Command
      */
     public function handle()
     {
-        /* $prontopagos = ProntoPago::with('property')
-        ->whereDate('command_date', '=', Carbon::now()->format('Y-m-d'))
-        ->where('is_applied',false)->limit(3500)->get();
+        $invoicesEnd = Invoice::with(['pronto_pagos'])
+        ->whereDate('end', '=', Carbon::now()->format('Y-m-d'))
+        ->limit(3500)->get();
 
-        foreach($prontopagos as $key=>$pronto){
-            if($pronto->property->balance >= 0){
-                $prontopagos[$key]->delete();
-            }else{
-                $prontopagos[$key]->is_applied = true;
-                $prontopagos[$key]->save();
-                $balance = $prontopagos[$key]->property->balance;
-                $prontopagos[$key]->property->balance = $balance - $pronto->amount;
-                $prontopagos[$key]->property->save();
+        foreach($invoicesEnd as $key=>$invoice){
+            foreach($invoice->pronto_pagos as $pronto){
+                $pronto->is_applied = false;
+                $pronto->save();
             }
-        } */
+        }
     }
 }

@@ -40,7 +40,7 @@ class ProntoPagoController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
-    {
+    {//return $request->all();
         // Bring all properties by residence
         $invoice = Invoice::findOrFail($request->invoice_id);
         $invoice->update([

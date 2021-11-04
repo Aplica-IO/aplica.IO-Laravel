@@ -68,7 +68,7 @@ class PaymentController extends Controller {
 		$amount = ($invoice->total * ($payment->property->alicuota / 100));
 		$shouldPay = round(-1 * (($amount * $percentage) + $amount),2);
 
-		if(count($invoice->pronto_pagos) > 0 && $invoice->start < $date && $date < $invoice->end && $payment->property->balance >= $shouldPay){
+		if(count($invoice->pronto_pagos) > 0 && $invoice->start <= $date && $date <= $invoice->end && $payment->property->balance >= $shouldPay){
 			$payment->update([
 				'prontopago' => true
 			]);
