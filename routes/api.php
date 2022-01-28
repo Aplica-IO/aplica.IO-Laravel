@@ -37,6 +37,8 @@ Route::post('reset-password', 'Auth\AuthController@resetPassword');
 Route::prefix('')->group(function () {
     // Send invitation for properties.
     Route::post('invitation', 'User\UserController@invite');
+	// Send invitation for auditors.
+    Route::post('auditor/invitation', 'User\UserController@inviteAuditor');
 	// Store Personal Charges to some properties
     Route::post('storePersonalCharges', 'Charge\ChargeController@storePersonalCharges');
 	

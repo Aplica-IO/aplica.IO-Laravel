@@ -8,6 +8,7 @@ use App\Http\Requests\User\{ShowRequest, IndexRequest, StoreRequest,
 UpdateRequest, DestroyRequest};
 use App\Repositories\UserRepository as Person;
 use App\Mail\SendInvitation;
+use App\Mail\SendInvitationToAuditor;
 use App\Models\Residence;
 use Illuminate\Support\Facades\Mail;
 use App\Helpers\ApiHelpers;
@@ -81,11 +82,21 @@ class UserController extends ApiController
     }
 
     public function invite(Request $request){
-        
         $residence = Residence::findOrFail($request->residence_id);                                                                                                     
         $auditor = $residence->auditor;
         $url = "https://app.aplica.io/auth/invitation?residence=". strval($residence->id) ."&reference=". $request->reference. "&alicuota=". strval($request->alicuota) . "&balance=". strval($request->balance) . "&email=" . $request->email;
         Mail::to($request->email)->send(new SendInvitation($residence,$auditor,$url));
+        return ApiHelpers::ApiResponse(200, 'Successfully completed',true);
+    }
+
+    public function inviteAuditor(Request $request){
+        $url = "https://app.aplica.io/auth/invitation-auditor?email=".$request->email."&first_name=".$request->first_name."&last_name="
+        .$request->last_name."&dni=".$request->dni;
+        $fullName;
+        if($request->first_name || $request->last_name){
+            $fullName = $request->first_name.' '.$request->last_name;
+        }
+        Mail::to($request->email)->send(new SendInvitationToAuditor($url,$fullName));
         return ApiHelpers::ApiResponse(200, 'Successfully completed',true);
     }
 }
