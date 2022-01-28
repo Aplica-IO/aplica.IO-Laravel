@@ -92,11 +92,14 @@ class InvoiceController extends Controller {
 			$total = $op + ($reserve * $op);
 			if($invoice->pronto_pagos){
 				$pronto = ProntoPago::where(['invoice_id'=>$invoice->id,'property_id'=>$property->id])->first();
-				if($pronto->is_applied){
-					$percentage = ($invoice->percentage_prontopago / 100);
-					$payed -= ($total * $percentage);
-					$prontopago = true;
-				}else{
+				if ($pronto) {
+					if($pronto->is_applied){
+						$percentage = ($invoice->percentage_prontopago / 100);
+						$payed -= ($total * $percentage);
+						$prontopago = true;
+					}
+				}
+				else{
 					$payed -= $total;
 				}
 			}else{

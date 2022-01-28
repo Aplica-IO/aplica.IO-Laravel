@@ -244,7 +244,8 @@ class PaymentController extends Controller {
             'bank' => $request->bank,
             'status' => 2,
             'property_id' => $request->property_id,
-            'currency_id' => $request->currency_id
+            'currency_id' => $request->currency_id,
+			'prontopago' => false
         ];
 
         $store = Payment::create($data);
